@@ -3,9 +3,9 @@ pipeline {
         docker { image 'node:16-alpine' }
     }
     stages {
-        stage('Test') {
+        stage('Build') {
             steps {
-                sh 'node --version'
+                sh 'node -v'
             }
         }
     }
