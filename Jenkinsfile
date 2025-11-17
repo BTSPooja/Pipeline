@@ -5,10 +5,6 @@ pipeline {
         maven 'Maven-3'
     }
 
-    environment {
-        DOCKERHUB = credentials('dockerhub')
-    }
-
     stages {
 
         stage('Checkout Code') {
@@ -25,16 +21,32 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKERHUB_USR}/simple-java-app:${BUILD_NUMBER} ."
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh "docker build -t ${DOCKER_USER}/simple-java-app:${BUILD_NUMBER} ."
+                    }
+                }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                sh """
-                echo ${DOCKERHUB_PSW} | docker login -u ${DOCKERHUB_USR} --password-stdin
-                docker push ${DOCKERHUB_USR}/simple-java-app:${BUILD_NUMBER}
-                """
+                script {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh """
+                        echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+                        docker push ${DOCKER_USER}/simple-java-app:${BUILD_NUMBER}
+                        """
+                    }
+                }
             }
         }
     }
